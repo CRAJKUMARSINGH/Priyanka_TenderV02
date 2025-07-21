@@ -1,0 +1,27 @@
+I need you to generate COMAPARATIVE STATEMENT IN A4 LANDSCAPE to create a visually appealing output for a bordered box placed below a table. The box should meet the following requirements:
+
+    Design Specifications:
+        The box must be right-aligned on the page.
+        It should occupy 60% of the page width.
+        The box must have a visible border (similar to the design in the attached box.png image).
+        The content inside the box is a comparative statement (e.g., a short text summarizing or comparing data from the table above it).
+    Context:
+        The box is part of a larger Markdown document or webpage that includes a table above it.
+        My previous attempts by software engineers failed to achieve the desired look, as shown in the attached box.png image.
+        For reference, I’ve provided a code snippet from a similar box used in another application (attached as previous_code.txt or described as [insert description if no file is provided]). Please adapt or improve this code to match the new requirements.
+    Output Requirements:
+        Provide clean, well-commented code in Markdown (if possible) or HTML/CSS.
+        Ensure the output is responsive and looks good on both desktop and mobile devices.
+        Match the aesthetic of the box.png image as closely as possible (e.g., border style, alignment, and proportions).
+        If Markdown alone cannot achieve the desired styling, include CSS for precise control.
+        Avoid overly complex solutions; keep the code simple and maintainable.
+    Attachments (to be provided by me):
+        box.png: Image showing the desired look of the bordered box.
+        previous_code.txt: Reference code from a similar box in another application (if available).
+
+Please review the requirements and the attached files (or descriptions) and generate the code to achieve this output. If any clarification is needed about the image or code, please ask specific questions to ensure accuracy.
+
+
+#################################################################
+STATUTORY TEXT
+>>>>>

@@ -1,0 +1,60 @@
+AI Prompt for One-Click Report Generation Update
+Objective
+Update the existing application to streamline document generation by implementing a single-button interface for generating and downloading all required documents (Comparative, Scrutiny, Work Order, Acceptance) in a zipped report, addressing the issue of multiple buttons in the current interface.
+Current Status
+The application generates four documents (Comparative, Scrutiny, Work Order, Acceptance) but uses multiple buttons, leading to a complex user experience. A single-sheet code sample with placeholder text for each document is available. The app also has issues with unauthorized text in statutory formats and requires specific output formats and orientations.
+Requirements
+Enhance the application to:
+
+Single-Button Interface:
+
+Replace the existing multi-button interface with one button to trigger the generation and download of all documents.
+The button should produce a zipped report containing all four documents in both .doc and .pdf formats.
+
+
+Output Formats:
+
+Generate all documents (Comparative, Scrutiny, Work Order, Acceptance) in .doc and .pdf formats.
+Ensure all documents fit on a single A4-sized page.
+Set the Comparative document to landscape orientation; others can remain in portrait unless specified.
+
+
+Statutory Compliance:
+
+Fix errors where unauthorized text is added to statutory departmental formats.
+Ensure all documents strictly adhere to predefined templates without modifications.
+
+
+Timestamps:
+
+Do not add new timestamps to any documents or outputs to maintain consistency with existing formats.
+
+
+
+Input Provided
+
+A single-sheet code sample containing placeholder text for each document (Comparative, Scrutiny, Work Order, Acceptance) will be shared to reflect the current state.
+
+Deliverables
+
+Updated application code that:
+Implements a single-button interface for generating and downloading a zipped report containing all documents in .doc and .pdf formats.
+Ensures all documents fit on a single A4 page, with the Comparative document in landscape orientation.
+Eliminates unauthorized text in statutory formats.
+Avoids adding new timestamps.
+
+
+Documentation or comments explaining the changes, particularly how the multi-button interface was consolidated into a single button.
+
+Constraints
+
+Maintain compatibility with the existing application architecture.
+Ensure strict adherence to statutory formats.
+Optimize for a seamless user experience with minimal interaction (one button).
+
+Notes
+
+Use the provided code sample as the baseline for updates.
+Ensure the zipped report is generated efficiently and includes all required documents.
+Test the output to confirm compliance with A4 sizing, orientation, and statutory formats.
+Prioritize clean, maintainable code with clear comments for future reference.
