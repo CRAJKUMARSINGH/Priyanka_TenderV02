@@ -23,8 +23,26 @@ class PDFGenerator:
     
     def check_latex_installation(self) -> Dict[str, Any]:
         """Check if LaTeX is properly installed"""
+        # Try Tectonic first (modern LaTeX engine)
         try:
-            # Check for pdflatex
+            result = subprocess.run(
+                ['tectonic', '--version'], 
+                capture_output=True, 
+                text=True, 
+                timeout=10
+            )
+            
+            if result.returncode == 0:
+                return {
+                    'installed': True,
+                    'version': result.stdout.split('\n')[0] if result.stdout else 'Tectonic LaTeX Engine',
+                    'command': 'tectonic'
+                }
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+        
+        # Fallback to pdflatex
+        try:
             result = subprocess.run(
                 ['pdflatex', '--version'], 
                 capture_output=True, 
@@ -38,32 +56,15 @@ class PDFGenerator:
                     'version': result.stdout.split('\n')[0] if result.stdout else 'Unknown',
                     'command': 'pdflatex'
                 }
-            else:
-                return {
-                    'installed': False,
-                    'error': 'pdflatex not found or not working',
-                    'command': None
-                }
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
                 
-        except subprocess.TimeoutExpired:
-            return {
-                'installed': False,
-                'error': 'LaTeX command timed out',
-                'command': None
-            }
-        except FileNotFoundError:
-            return {
-                'installed': False,
-                'error': 'pdflatex command not found. Please install LaTeX.',
-                'command': None,
-                'install_hint': 'sudo apt-get install texlive-latex-extra texlive-fonts-recommended'
-            }
-        except Exception as e:
-            return {
-                'installed': False,
-                'error': f'LaTeX check failed: {str(e)}',
-                'command': None
-            }
+        return {
+            'installed': False,
+            'error': 'No LaTeX engine found. Please install Tectonic or TeX Live.',
+            'command': None,
+            'install_hint': 'Install Tectonic or TeX Live for PDF generation'
+        }
     
     def generate_pdf(self, latex_content: str, filename_base: str) -> Dict[str, Any]:
         """Generate PDF from LaTeX content"""
@@ -96,8 +97,8 @@ class PDFGenerator:
                         'error': f"Failed to write LaTeX file: {str(e)}"
                     }
                 
-                # Compile PDF using pdflatex
-                compile_result = self._compile_latex(tex_path, temp_compile_dir)
+                # Compile PDF using available LaTeX engine
+                compile_result = self._compile_latex(tex_path, temp_compile_dir, latex_check['command'])
                 
                 if not compile_result['success']:
                     return compile_result
@@ -132,21 +133,34 @@ class PDFGenerator:
                 'error': f"PDF generation failed: {str(e)}"
             }
     
-    def _compile_latex(self, tex_path: str, work_dir: str) -> Dict[str, Any]:
-        """Compile LaTeX file to PDF"""
+    def _compile_latex(self, tex_path: str, work_dir: str, latex_command: str = 'pdflatex') -> Dict[str, Any]:
+        """Compile LaTeX file to PDF using specified engine"""
         try:
-            # First compilation
-            result1 = subprocess.run([
-                'pdflatex',
-                '-interaction=nonstopmode',
-                '-output-directory', work_dir,
-                tex_path
-            ], 
-            capture_output=True, 
-            text=True, 
-            cwd=work_dir,
-            timeout=60
-            )
+            if latex_command == 'tectonic':
+                # Tectonic compilation (single pass, modern engine)
+                result1 = subprocess.run([
+                    'tectonic',
+                    '--outdir', work_dir,
+                    tex_path
+                ], 
+                capture_output=True, 
+                text=True, 
+                cwd=work_dir,
+                timeout=60
+                )
+            else:
+                # pdflatex compilation (traditional)
+                result1 = subprocess.run([
+                    'pdflatex',
+                    '-interaction=nonstopmode',
+                    '-output-directory', work_dir,
+                    tex_path
+                ], 
+                capture_output=True, 
+                text=True, 
+                cwd=work_dir,
+                timeout=60
+                )
             
             # Check if first compilation succeeded
             pdf_path = os.path.join(work_dir, os.path.basename(tex_path).replace('.tex', '.pdf'))
@@ -162,8 +176,8 @@ class PDFGenerator:
                     'returncode': result1.returncode
                 }
             
-            # Second compilation for cross-references (if needed)
-            if os.path.exists(pdf_path):
+            # Second compilation for cross-references (only needed for pdflatex)
+            if latex_command == 'pdflatex' and os.path.exists(pdf_path):
                 try:
                     subprocess.run([
                         'pdflatex',
@@ -203,7 +217,7 @@ class PDFGenerator:
         except FileNotFoundError:
             return {
                 'success': False,
-                'error': "pdflatex command not found. Please ensure LaTeX is installed."
+                'error': f"{latex_command} command not found. Please ensure LaTeX is installed."
             }
         except Exception as e:
             return {
