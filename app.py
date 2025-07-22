@@ -668,9 +668,48 @@ def handle_manual_entry():
 
 def handle_work_entry(db_manager, validator):
     """Enhanced work entry functionality"""
-    if not st.session_state.tender_data:
+    # Check if we have tender data or extracted works
+    has_tender_data = bool(st.session_state.tender_data and st.session_state.tender_data.get('nit_number'))
+    has_extracted_works = bool(st.session_state.get('extracted_works'))
+    
+    if not has_tender_data and not has_extracted_works:
         st.warning("⚠️ Please enter NIT details first in the Data Input tab.")
         st.info("💡 Use the 'Data Input' tab to upload files or enter NIT details manually.")
+        return
+    
+    # If we have extracted works but no selected work, show work selection interface
+    if has_extracted_works and not has_tender_data:
+        st.subheader("📝 Select Work to Process")
+        st.info(f"Found {len(st.session_state.extracted_works)} works in NIT {st.session_state.get('current_nit', 'N/A')}")
+        
+        # Display works for selection
+        work_options = []
+        for i, work in enumerate(st.session_state.extracted_works):
+            work_name = work.get('work_name', 'Unnamed Work')
+            if len(work_name) > 50:
+                work_name = work_name[:50] + "..."
+            work_options.append(f"Work {work.get('item_number', i+1)}: {work_name}")
+        
+        selected_work_index = st.selectbox(
+            "Choose a work to add bidders:",
+            range(len(work_options)),
+            format_func=lambda x: work_options[x]
+        )
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("📝 Select This Work", type="primary"):
+                selected_work = st.session_state.extracted_works[selected_work_index]
+                st.session_state.tender_data.update(selected_work)
+                st.success(f"✅ Work {selected_work.get('item_number', selected_work_index+1)} selected!")
+                st.rerun()
+        
+        with col2:
+            if st.button("🔄 Back to Data Input"):
+                st.session_state.extracted_works = []
+                st.session_state.current_nit = None
+                st.rerun()
+        
         return
 
     # Enhanced NIT details display
@@ -848,8 +887,8 @@ def handle_bidder_entry(db_manager, validator):
                 # Format for display and select only relevant columns
                 display_df = df[['name', 'percentage', 'bid_amount']].copy()
                 display_df.columns = ['Bidder Name', 'Percentage', 'Bid Amount']
-                display_df['Bid Amount'] = display_df['Bid Amount'].apply(lambda x: f"₹{format_currency(x)}")
-                display_df['Percentage'] = display_df['Percentage'].apply(lambda x: f"{x:+.2f}%")
+                display_df.loc[:, 'Bid Amount'] = display_df['Bid Amount'].apply(lambda x: f"₹{format_currency(x)}")
+                display_df.loc[:, 'Percentage'] = display_df['Percentage'].apply(lambda x: f"{x:+.2f}%")
                 
                 st.dataframe(display_df, use_container_width=True)
 
