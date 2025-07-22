@@ -1,0 +1,66 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+
+\geometry{margin=2cm}
+\pagestyle{fancy}
+
+\begin{document}
+
+\begin{center}
+\textbf{{{office_header}}}\\[0.3cm]
+\textbf{WORK ORDER}\\[0.2cm]
+\end{center}
+
+\vspace{0.5cm}
+
+\noindent
+Work Order No. {{nit_number}}/WO \hfill Date: {{current_date}}
+
+\vspace{0.5cm}
+
+\noindent
+To,\\
+{{lowest_bidder_name}}
+
+\vspace{0.3cm}
+
+\noindent
+Subject: Work Order for {{work_name}}
+
+\vspace{0.3cm}
+
+\noindent
+Sir,
+
+\vspace{0.3cm}
+
+\noindent
+You are hereby directed to execute the work "{{work_name}}" for a contract amount of Rs. {{lowest_bidder_amount}} ({{lowest_bidder_amount_words}}) as per the terms and conditions of the tender and agreement.
+
+\vspace{0.3cm}
+
+\noindent
+\textbf{Work Details:}
+\begin{itemize}
+\item Contract Amount: Rs. {{lowest_bidder_amount}}
+\item Time of Completion: {{time_of_completion}} months
+\item Earnest Money: Rs. {{earnest_money}}
+\item Commencement Date: {{current_date}}
+\end{itemize}
+
+\vspace{0.3cm}
+
+\noindent
+The work shall be executed as per specifications, drawings, and conditions of contract. Any deviation from the approved plans requires prior written approval.
+
+\vspace{1cm}
+
+\noindent
+\hfill {{ee_name}}\\
+\hfill Executive Engineer\\
+\hfill PWD Electric Division, Udaipur
+
+\end{document}

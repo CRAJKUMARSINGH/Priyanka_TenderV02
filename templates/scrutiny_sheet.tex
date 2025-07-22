@@ -1,0 +1,49 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{booktabs}
+
+\geometry{margin=2cm}
+
+\begin{document}
+
+\begin{center}
+\textbf{{{office_header}}}\\[0.3cm]
+\textbf{TENDER SCRUTINY SHEET}\\[0.2cm]
+\end{center}
+
+\vspace{0.5cm}
+
+\noindent
+\textbf{NIT No.:} {{nit_number}} \hfill \textbf{Date:} {{current_date}}\\
+\textbf{Work:} {{work_name}}\\
+\textbf{Estimated Cost:} Rs. {{estimated_cost}}
+
+\vspace{0.5cm}
+
+\begin{longtable}{|c|p{3cm}|c|c|c|p{2cm}|}
+\hline
+\textbf{S.No.} & \textbf{Bidder Name} & \textbf{Bid Amount} & \textbf{Technical} & \textbf{Financial} & \textbf{Remarks} \\
+\hline
+{{#each sorted_bidders}}
+{{@index1}} & {{name}} & {{bid_amount}} & Qualified & Qualified & {{#if @first}}Lowest{{/if}} \\
+\hline
+{{/each}}
+\end{longtable}
+
+\vspace{0.5cm}
+
+\noindent
+\textbf{Recommendation:} {{lowest_bidder_name}} is recommended for award of work being the lowest technically and financially qualified bidder.
+
+\vspace{1cm}
+
+\noindent
+\textbf{{{ee_name}}}\\
+\textbf{Executive Engineer}\\
+\textbf{PWD Electric Division, Udaipur}
+
+\end{document}
