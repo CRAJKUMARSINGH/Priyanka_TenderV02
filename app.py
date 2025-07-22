@@ -422,21 +422,71 @@ def handle_data_input(excel_parser, pdf_parser):
                     extracted_data = excel_parser.parse_excel(uploaded_file)
                     
                     if extracted_data:
-                        st.session_state.tender_data.update(extracted_data)
-                        st.success("🎉 Excel file processed successfully!")
-                        st.balloons()
-                        
-                        with st.expander("📋 Extracted Data Preview", expanded=True):
-                            # Enhanced data display
-                            if 'nit_number' in extracted_data:
-                                st.markdown(f"**NIT Number:** `{extracted_data['nit_number']}`")
-                            if 'work_name' in extracted_data:
-                                st.markdown(f"**Work Name:** {extracted_data['work_name']}")
-                            if 'estimated_cost' in extracted_data:
-                                st.markdown(f"**Estimated Cost:** ₹{format_currency(extracted_data['estimated_cost'])}")
+                        # Handle multiple works format
+                        if extracted_data.get('multiple_works'):
+                            st.success(f"🎉 Excel file processed successfully! Found {extracted_data['works_count']} works in NIT {extracted_data['nit_number']}")
+                            st.balloons()
                             
-                            # Show full data in JSON format
-                            st.json(extracted_data)
+                            # Store all works in session state
+                            if 'extracted_works' not in st.session_state:
+                                st.session_state.extracted_works = []
+                            
+                            st.session_state.extracted_works = extracted_data['works']
+                            st.session_state.current_nit = extracted_data['nit_number']
+                            
+                            with st.expander("📋 Multiple Works Preview", expanded=True):
+                                st.markdown(f"**NIT Number:** `{extracted_data['nit_number']}`")
+                                st.markdown(f"**Total Works:** {extracted_data['works_count']}")
+                                
+                                # Display works in a table
+                                works_preview = []
+                                for i, work in enumerate(extracted_data['works'], 1):
+                                    works_preview.append({
+                                        'Item': work.get('item_number', i),
+                                        'Work Name': work.get('work_name', 'N/A')[:50] + "..." if len(work.get('work_name', '')) > 50 else work.get('work_name', 'N/A'),
+                                        'Estimated Cost': f"₹{format_currency(work.get('estimated_cost', 0))}",
+                                        'Completion Time': f"{work.get('time_of_completion', 0)} months",
+                                        'Earnest Money': f"₹{format_currency(work.get('earnest_money', 0))}"
+                                    })
+                                
+                                df_preview = pd.DataFrame(works_preview)
+                                st.dataframe(df_preview, use_container_width=True)
+                                
+                                # Work selection for individual processing
+                                st.markdown("---")
+                                st.subheader("📝 Select Work to Process")
+                                work_options = [f"Work {work.get('item_number', i+1)}: {work.get('work_name', 'Unnamed Work')[:30]}..." 
+                                              for i, work in enumerate(extracted_data['works'])]
+                                
+                                selected_work_index = st.selectbox(
+                                    "Choose a work to add bidders:",
+                                    range(len(work_options)),
+                                    format_func=lambda x: work_options[x]
+                                )
+                                
+                                if st.button("📝 Process Selected Work", type="primary"):
+                                    selected_work = extracted_data['works'][selected_work_index]
+                                    st.session_state.tender_data.update(selected_work)
+                                    st.success(f"✅ Work {selected_work.get('item_number', selected_work_index+1)} selected for processing!")
+                                    st.rerun()
+                        
+                        else:
+                            # Handle single work format
+                            st.session_state.tender_data.update(extracted_data)
+                            st.success("🎉 Excel file processed successfully!")
+                            st.balloons()
+                            
+                            with st.expander("📋 Extracted Data Preview", expanded=True):
+                                # Enhanced data display
+                                if 'nit_number' in extracted_data:
+                                    st.markdown(f"**NIT Number:** `{extracted_data['nit_number']}`")
+                                if 'work_name' in extracted_data:
+                                    st.markdown(f"**Work Name:** {extracted_data['work_name']}")
+                                if 'estimated_cost' in extracted_data:
+                                    st.markdown(f"**Estimated Cost:** ₹{format_currency(extracted_data['estimated_cost'])}")
+                                
+                                # Show full data in JSON format
+                                st.json(extracted_data)
                     else:
                         st.error("❌ No valid data found in Excel file")
                         st.info("💡 Please ensure your Excel file contains the required columns and data format.")
@@ -702,7 +752,7 @@ def handle_bidder_entry(db_manager, validator):
     for i in range(int(num_bidders)):
         st.markdown(f"#### 👤 Bidder {i+1}")
         
-        col1, col2, col3, col4 = st.columns([3, 2, 2, 2])
+        col1, col2 = st.columns([3, 2])
         
         with col1:
             # Bidder name with autocomplete suggestions
@@ -710,7 +760,7 @@ def handle_bidder_entry(db_manager, validator):
             suggested_names = [b['name'] for b in recent_bidders] if recent_bidders else []
             
             name = st.text_input(
-                f"Name *",
+                f"Bidder Name *",
                 key=bidder_key,
                 placeholder="Enter bidder name",
                 help="Full legal name of the bidder"
@@ -732,7 +782,7 @@ def handle_bidder_entry(db_manager, validator):
 
         with col2:
             percentage = st.number_input(
-                f"Percentage",
+                f"Bid Percentage",
                 key=f"bidder_{i}_percentage",
                 min_value=-50.0,
                 max_value=100.0,
@@ -742,29 +792,10 @@ def handle_bidder_entry(db_manager, validator):
                 help="Bid percentage (+ for above, - for below estimate)"
             )
 
-        with col3:
-            # Auto-calculate bid amount
-            estimated_cost = st.session_state.tender_data.get('estimated_cost', 0)
-            calculated_amount = estimated_cost * (1 + percentage / 100) if estimated_cost > 0 else 0
-            
-            bid_amount = st.number_input(
-                f"Bid Amount (₹)",
-                key=f"bidder_{i}_amount",
-                min_value=0.0,
-                value=float(calculated_amount),
-                step=1000.0,
-                format="%.2f",
-                help="Final bid amount"
-            )
-
-        with col4:
-            contact = st.text_input(
-                f"Contact",
-                key=f"bidder_{i}_contact",
-                placeholder="Phone/Email",
-                help="Contact information"
-            )
-
+        # Auto-calculate and display bid amount for validation
+        estimated_cost = st.session_state.tender_data.get('estimated_cost', 0)
+        calculated_amount = estimated_cost * (1 + percentage / 100) if estimated_cost > 0 else 0
+        
         # Validation feedback for this bidder
         if name and percentage is not None:
             if percentage > 0:
@@ -779,8 +810,8 @@ def handle_bidder_entry(db_manager, validator):
             bidders.append({
                 'name': name,
                 'percentage': percentage,
-                'bid_amount': bid_amount if bid_amount > 0 else calculated_amount,
-                'contact': contact
+                'bid_amount': calculated_amount,
+                'contact': ''  # Keep for compatibility with existing database structure
             })
 
         st.markdown("---")
@@ -809,14 +840,18 @@ def handle_bidder_entry(db_manager, validator):
                     st.metric("📏 Bid Range", f"₹{format_currency(bid_range)}", 
                              f"{len(bidders)} bidders")
 
-                # Bidder table preview
+                # Bidder table preview (simplified)
                 df = pd.DataFrame(bidders)
                 df = df.sort_values('bid_amount').reset_index(drop=True)
                 df.index += 1  # Start from 1
-                df['bid_amount'] = df['bid_amount'].apply(lambda x: f"₹{format_currency(x)}")
-                df['percentage'] = df['percentage'].apply(lambda x: f"{x:+.2f}%")
                 
-                st.dataframe(df, use_container_width=True)
+                # Format for display and select only relevant columns
+                display_df = df[['name', 'percentage', 'bid_amount']].copy()
+                display_df.columns = ['Bidder Name', 'Percentage', 'Bid Amount']
+                display_df['Bid Amount'] = display_df['Bid Amount'].apply(lambda x: f"₹{format_currency(x)}")
+                display_df['Percentage'] = display_df['Percentage'].apply(lambda x: f"{x:+.2f}%")
+                
+                st.dataframe(display_df, use_container_width=True)
 
         # Save button with confirmation
         if st.button("💾 Save Work Entry", type="primary", use_container_width=True):

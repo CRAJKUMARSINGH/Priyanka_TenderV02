@@ -22,8 +22,9 @@ class ExcelParser:
             file_content = uploaded_file.read()
             uploaded_file.seek(0)  # Reset file pointer
             
-            # Try different parsing methods
+            # Try different parsing methods in order of preference
             parsing_methods = [
+                self._parse_nit_multiple_works_format,  # New method for NIT with multiple works
                 self._parse_standard_format,
                 self._parse_vertical_format,
                 self._parse_mixed_format,
@@ -48,6 +49,109 @@ class ExcelParser:
         except Exception as e:
             logger.error(f"Error parsing Excel file: {str(e)}")
             return None
+    
+    def _parse_nit_multiple_works_format(self, uploaded_file) -> Optional[Dict[str, Any]]:
+        """Parse NIT format with multiple works in rows"""
+        try:
+            workbook = openpyxl.load_workbook(uploaded_file, data_only=True)
+            sheet = workbook.active
+            
+            # Extract header information (rows 1-4)
+            nit_number = None
+            dates = {}
+            
+            # Parse header information
+            for row in range(1, 5):
+                cell_label = sheet.cell(row=row, column=1).value
+                cell_value = sheet.cell(row=row, column=3).value
+                
+                if cell_label and cell_value:
+                    label_str = str(cell_label).lower()
+                    if 'nit' in label_str and 'number' in label_str:
+                        nit_number = str(cell_value)
+                    elif 'calling' in label_str:
+                        dates['calling_date'] = str(cell_value)
+                    elif 'receipt' in label_str:
+                        dates['receipt_date'] = str(cell_value)
+                    elif 'opening' in label_str:
+                        dates['opening_date'] = str(cell_value)
+            
+            # Check if row 5 contains column headers
+            headers_row = 5
+            headers = []
+            for col in range(1, sheet.max_column + 1):
+                header = sheet.cell(row=headers_row, column=col).value
+                headers.append(str(header).lower().strip() if header else f"col_{col}")
+            
+            # Parse works data starting from row 6
+            works = []
+            for row in range(6, sheet.max_row + 1):
+                work_data = {}
+                row_has_data = False
+                
+                for col, header in enumerate(headers, 1):
+                    cell_value = sheet.cell(row=row, column=col).value
+                    if cell_value is not None and str(cell_value).strip():
+                        row_has_data = True
+                        
+                        # Map headers to standard field names
+                        if 'item' in header or 'no' in header:
+                            work_data['item_number'] = str(cell_value).strip()
+                        elif 'work' in header or 'name' in header:
+                            work_data['work_name'] = str(cell_value).strip()
+                        elif 'estimated' in header or 'cost' in header:
+                            # Convert from lacs to rupees
+                            try:
+                                cost_in_lacs = float(cell_value)
+                                work_data['estimated_cost'] = cost_in_lacs * 100000  # Convert lacs to rupees
+                            except (ValueError, TypeError):
+                                work_data['estimated_cost'] = cell_value
+                        elif 'schedule' in header or 'g-schedule' in header:
+                            work_data['schedule_amount'] = self._clean_numeric_value(cell_value)
+                        elif 'completion' in header or 'month' in header:
+                            work_data['time_of_completion'] = self._clean_numeric_value(cell_value)
+                        elif 'earnest' in header or 'money' in header:
+                            work_data['earnest_money'] = self._clean_numeric_value(cell_value)
+                
+                if row_has_data and work_data:
+                    # Add common NIT information to each work
+                    work_data['nit_number'] = nit_number
+                    work_data['date'] = dates.get('opening_date', dates.get('receipt_date', ''))
+                    works.append(work_data)
+            
+            workbook.close()
+            
+            if not works:
+                return None
+            
+            # Return structure for multiple works
+            result = {
+                'nit_number': nit_number,
+                'multiple_works': True,
+                'works_count': len(works),
+                'works': works,
+                'dates': dates
+            }
+            
+            logger.info(f"Successfully parsed NIT with {len(works)} works")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in NIT multiple works parsing: {str(e)}")
+            return None
+    
+    def _clean_numeric_value(self, value):
+        """Clean and convert numeric values"""
+        if value is None:
+            return 0
+        try:
+            if isinstance(value, (int, float)):
+                return float(value)
+            # Remove any non-numeric characters and convert
+            cleaned = re.sub(r'[^\d.]', '', str(value))
+            return float(cleaned) if cleaned else 0
+        except:
+            return 0
     
     def _parse_standard_format(self, uploaded_file) -> Optional[Dict[str, Any]]:
         """Parse standard horizontal format Excel file"""
@@ -399,7 +503,26 @@ class ExcelParser:
         if not data:
             return False
         
-        # Check for at least one required field
+        # Check for multiple works format
+        if data.get('multiple_works'):
+            # Validate multiple works structure
+            if 'works' not in data or not data['works']:
+                logger.warning("Multiple works format detected but no works found")
+                return False
+            
+            # Validate each work has minimum required fields
+            for i, work in enumerate(data['works']):
+                if 'work_name' not in work or not work['work_name']:
+                    logger.warning(f"Work {i+1} missing work_name")
+                    return False
+                if 'estimated_cost' not in work or not work['estimated_cost']:
+                    logger.warning(f"Work {i+1} missing estimated_cost")
+                    return False
+            
+            logger.info(f"Validation result: True, extracted {len(data['works'])} works from NIT {data.get('nit_number')}")
+            return True
+        
+        # Check for at least one required field for single work
         has_required = any(field in data for field in self.required_columns)
         
         # Check for reasonable values
