@@ -412,7 +412,7 @@ class TemplateProcessor:
 \\usepackage{booktabs}
 \\usepackage{fancyhdr}
 
-\\geometry{margin=2cm}
+\\geometry{margin=10mm}
 \\pagestyle{fancy}
 
 \\begin{document}
@@ -464,7 +464,7 @@ class TemplateProcessor:
 \\usepackage{geometry}
 \\usepackage{fancyhdr}
 
-\\geometry{margin=2cm}
+\\geometry{margin=10mm}
 \\pagestyle{fancy}
 
 \\begin{document}
@@ -529,7 +529,7 @@ The work should be completed within {{time_of_completion}} months from the date 
 \\usepackage{longtable}
 \\usepackage{booktabs}
 
-\\geometry{margin=2cm}
+\\geometry{margin=10mm}
 
 \\begin{document}
 
@@ -579,7 +579,7 @@ The work should be completed within {{time_of_completion}} months from the date 
 \\usepackage{geometry}
 \\usepackage{fancyhdr}
 
-\\geometry{margin=2cm}
+\\geometry{margin=10mm}
 \\pagestyle{fancy}
 
 \\begin{document}
