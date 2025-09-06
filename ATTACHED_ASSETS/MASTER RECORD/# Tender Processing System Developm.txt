@@ -1,0 +1,300 @@
+# Tender Processing System Development Prompt
+
+You are an AI assistant tasked with assisting in the development of a Streamlit-based Tender Processing System that processes tender-related documents, extracts data from Excel or PDF files, allows bidder information input, generates key documents, and manages bidder credentials for reuse. Below is an updated, consolidated, and concise prompt based on the provided documents, removing redundancies, aligning with the app’s functionality, and reflecting the current date and time (08:01 PM IST, Saturday, July 19, 2025).
+
+---
+
+## Objective
+Develop a Streamlit app for processing tender documents, enabling users to:
+- Upload Excel or PDF files containing Notice Inviting Tender (NIT) details.
+- Input and manage bidder information (name, percentage bid, contact).
+- Generate bid comparison sheets, scrutiny sheets, acceptance letters, and work orders in multiple formats (HTML, Word, PDF, ZIP).
+- Store and reuse bidder credentials for efficiency.
+- Ensure robust error handling and a user-friendly interface.
+
+---
+
+## 1. Process Workflow
+1. **Data Input**:
+   - **Excel Upload**: Parse Excel files to extract NIT details (e.g., NIT Number, Work Name, Estimated Cost, Schedule Amount, Time of Completion, Earnest Money, Date, EE Name).
+   - **PDF Upload**: Extract similar details from PDF tender documents using regex-based parsing.
+   - **Manual Entry**: Allow manual input of NIT details and work information.
+2. **Bidder Information Input**:
+   - Users specify the number of bidders (1–10) per work.
+   - Input fields for each bidder: Name, Percentage (±99.99%), Contact (optional for credential storage).
+   - Auto-suggest bidder names from stored credentials.
+3. **Document Generation**:
+   - Generate bid comparison sheet (table with bidder details, ranked by bid amount).
+   - Generate scrutiny sheet (text listing bidder compliance and L1 recommendation).
+   - Generate acceptance letter (formal letter to the lowest bidder).
+   - Generate work order (details of assigned work, including terms).
+   - Outputs in HTML, Word, PDF, and ZIP formats with landscape orientation.
+   - Timestamp all documents with "Generated on: 19-07-2025 20:01 IST".
+4. **Credential Management**:
+   - Store bidder credentials (name, contact) in SQLite for reuse across tenders.
+   - Auto-suggest recent bidders during input.
+5. **Export and Download**:
+   - Download individual documents (CSV for comparison table, TXT for scrutiny/acceptance, HTML/Word/PDF for all).
+   - Provide a ZIP package containing all documents in organized folders.
+
+---
+
+## 2. Data Structure (Excel/PDF Extraction)
+Extract the following fields from Excel/PDF inputs:
+- **NIT Number**: e.g., "27/2024-25"
+- **Work Name**: Descriptive name of the work
+- **Estimated Cost**: Numeric value (e.g., ₹1,000,000)
+- **Schedule Amount**: Numeric value
+- **Time of Completion**: Integer (months, e.g., 12)
+- **Earnest Money**: Numeric value (e.g., ₹20,000)
+- **Date**: DD-MM-YYYY format
+- **EE Name**: Executive Engineer’s name (e.g., "Executive Engineer")
+
+**Note**: Clarify exact column names from the sample Excel file for precise mapping.
+
+---
+
+## 3. Sample Output Templates
+### Bid Comparison Sheet
+```markdown
+BID COMPARISON TABLE
+NIT: {nit_number} | Work: {work_name}
+------------------------------------------------
+Rank | Bidder Name | Quoted % | Bid Amount (₹) | Status
+------------------------------------------------
+1    | {bidder1_name} | {+X.XX}% | ₹{bid_amount1:,.2f} | L1 (Lowest)
+2    | {bidder2_name} | {+X.XX}% | ₹{bid_amount2:,.2f} | {Above/Below/At Estimate}
+...
+------------------------------------------------
+Generated: 19-07-2025 20:01 IST
+```
+
+### Scrutiny Sheet
+```markdown
+SCRUTINY SHEET OF TENDER
+================================================
+NIT Number: {nit_number}
+Work Name: {work_name}
+Date: {date}
+Executive Engineer: {ee_name}
+
+WORK DETAILS:
+------------------------------------------------
+Estimated Cost: ₹{estimated_cost:,.0f}
+Time of Completion: {time_of_completion} months
+Schedule Amount: ₹{schedule_amount:,.0f}
+Earnest Money: ₹{earnest_money:,.0f}
+
+BIDDER COMPARISON:
+------------------------------------------------
+Bidder Name         % Rate    Bid Amount (₹)  Status
+------------------------------------------------
+{bidder1_name}      {+X.XX}%  ₹{bid_amount1:,.0f}  L1
+{bidder2_name}      {+X.XX}%  ₹{bid_amount2:,.0f}  L2
+...
+
+LOWEST BIDDER: {lowest_bidder_name}
+QUOTED PERCENTAGE: {+X.XX}%
+CALCULATED AMOUNT: ₹{lowest_bid_amount:,.0f}
+
+RECOMMENDATION:
+The tender of {lowest_bidder_name} quoting {+X.XX}% is recommended.
+================================================
+Generated: 19-07-2025 20:01 IST
+```
+
+### Acceptance Letter
+```markdown
+OFFICE OF THE EXECUTIVE ENGINEER
+PWD ELECTRIC DIVISION
+================================================
+ACCEPTANCE LETTER
+Date: {date}
+Reference: NIT {nit_number}
+
+To,
+{lowest_bidder_name}
+
+Subject: Acceptance of Tender Bid - NIT {nit_number}
+
+Dear Sir/Madam,
+
+Your bid for the work described below has been accepted:
+
+WORK DETAILS:
+----------------------------------------
+Work Name: {work_name}
+NIT Number: {nit_number}
+Quoted Percentage: {+X.XX}%
+Calculated Bid Amount: ₹{bid_amount:,.0f}
+Time of Completion: {time_of_completion} months
+Earnest Money: ₹{earnest_money:,.0f}
+
+TERMS AND CONDITIONS:
+----------------------------------------
+1. Commence work within 7 days.
+2. Complete within stipulated time.
+3. Execute agreement within 3 days.
+4. Security deposit as per rules.
+
+Yours faithfully,
+{ee_name}
+Executive Engineer
+
+Generated: 19-07-2025 20:01 IST
+```
+
+### Work Order
+```markdown
+WORK ORDER
+================================================
+NIT Number: {nit_number}
+Work Name: {work_name}
+Date: {date}
+
+To,
+{lowest_bidder_name}
+
+Subject: Work Order for {work_name}
+
+Dear Sir/Madam,
+
+You are awarded the following work:
+
+WORK DETAILS:
+----------------------------------------
+NIT Number: {nit_number}
+Estimated Cost: ₹{estimated_cost:,.0f}
+Quoted Percentage: {+X.XX}%
+Bid Amount: ₹{bid_amount:,.0f}
+Time of Completion: {time_of_completion} months
+
+TERMS:
+----------------------------------------
+1. Start within 7 days.
+2. Comply with tender conditions.
+3. Submit performance security.
+
+Yours faithfully,
+{ee_name}
+Executive Engineer
+
+Generated: 19-07-2025 20:01 IST
+```
+
+---
+
+## 4. Bidder Credential Management
+- **Storage**: Use SQLite to store bidder credentials (name, contact) with a unique ID and timestamp.
+- **Schema**:
+  ```sql
+  CREATE TABLE bidders (
+      id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      contact TEXT,
+      last_used TIMESTAMP
+  );
+  ```
+- **Retrieval**: Query the database for recent bidders (e.g., last 50 unique entries, ordered by `last_used`).
+- **Auto-Suggestion**: Implement a Streamlit `selectbox` with fuzzy matching for bidder names during input.
+- **Update**: Update `last_used` timestamp when a bidder is selected or added (e.g., "2025-07-19 20:01:00 IST").
+- **Export/Import**: Allow export/import of bidder database as JSON for portability.
+
+---
+
+## 5. Error Handling and Validation
+- **Excel/PDF Validation**:
+  - Check for required columns/fields (listed in Data Structure).
+  - Error: "Invalid Excel/PDF format. Ensure required fields: {list}."
+- **Numeric Inputs**:
+  - Bid amounts, estimated costs, earnest money: Must be positive numbers.
+  - Error: "All amounts must be positive numbers."
+- **Percentage Validation**:
+  - Must be between -99.99% and +99.99%.
+  - Error: "Percentage must be between -99.99% and +99.99%."
+- **Required Fields**:
+  - NIT Number, Work Name, Bidder Name: Cannot be empty.
+  - Error: "All required fields must be filled."
+- **NIT Number Format**:
+  - Must match pattern `^\d+/\d{4}-\d{2}$`.
+  - Error: "Invalid NIT number format. Use {number}/{YYYY-YY}."
+- **File Upload**:
+  - Validate file type (xlsx/xls for Excel, pdf for PDF).
+  - Error: "Unsupported file type. Use Excel (.xlsx/.xls) or PDF."
+- **Logging**: Log all errors with timestamps (e.g., "2025-07-19 20:01:00 IST") and stack traces for debugging.
+
+---
+
+## 6. Usability Enhancements
+- **Pre-filled Fields**: Auto-populate bidder names from stored credentials using a dropdown with fuzzy search.
+- **Navigation**:
+  - Use tabs for Data Input, Work Entry, and Reports.
+  - Sidebar for NIT overview and system status (total works, works with bidders, unique NITs).
+- **Feedback**:
+  - Show success balloons (`st.balloons()`) after document generation.
+  - Display success/error messages for uploads, data imports, and report generation.
+- **Export Options**:
+  - Download buttons for CSV, TXT, HTML, Word, PDF, and ZIP.
+  - Organize ZIP contents: `Combined_Reports/`, `Separate_Reports/Comparison/`, etc.
+- **Clear Data**: Button to reset all data with confirmation prompt.
+- **Progress Indicators**: Use `st.spinner()` for long-running tasks like file parsing or report generation.
+- **Responsive Design**: Use `st.columns()` and `st.expander()` for clean layout.
+
+---
+
+## 7. Implementation Guidelines
+- **Tech Stack**:
+  - **Streamlit**: For UI and app structure.
+  - **Pandas**: For Excel processing.
+  - **pdfplumber**: For PDF extraction.
+  - **python-docx**: For Word document generation.
+  - **weasyprint**: For PDF conversion.
+  - **SQLite**: For bidder credential storage.
+- **Modular Design**:
+  - `TenderProcessor`: Core logic for work and bidder management.
+  - `ReportGenerator`: Document generation (HTML, Word, PDF).
+  - `EnhancedReportGenerator`: Comprehensive output formats and ZIP packaging.
+  - `utils`: Helper functions (e.g., `validate_percentage`, `format_currency`).
+- **Code Reusability**:
+  - Reuse Excel parsing logic from `excel_parser.py`.
+  - Adopt bidder input UI from `priyanka_tender`.
+  - Integrate celebratory UI from `SharedFileProcessorOld`.
+- **Formatting**:
+  - Bid Comparison: Amounts to 2 decimal places (e.g., ₹1,234.56).
+  - Other Documents: Amounts rounded to 0 decimal places (e.g., ₹1,235).
+  - Use landscape orientation for all documents.
+
+---
+
+## 8. Milestones
+1. **Week 1**: Build Streamlit skeleton with Excel/PDF upload.
+2. **Week 2**: Implement NIT data parsing and display.
+3. **Week 3**: Develop work-wise bidder input UI with auto-suggestion.
+4. **Week 4–5**: Implement document generation (HTML, Word, PDF, ZIP).
+5. **Week 6**: Add bidder credential storage and retrieval.
+6. **Week 7**: Enhance UI/UX with balloons, messages, and error handling.
+7. **Week 8**: Conduct functional validation, usability tests, and deployment (target date: September 6, 2025).
+
+---
+
+## 9. Validation and Testing
+- **Functional Validation**:
+  - Verify document accuracy (data, formatting, decimal places).
+  - Ensure bidder rankings and L1 status are correct.
+- **Usability Tests**:
+  - Test ease of data entry, navigation, and download process.
+  - Validate auto-suggestion for bidder names.
+- **Performance**:
+  - Measure upload, parsing, and report generation times.
+- **User Feedback**:
+  - Collect feedback from internal staff post-deployment (by September 13, 2025).
+
+---
+
+## 10. Notes
+- **Image Clarification**: Specific column names and output formats from the sample image would help refine field mappings and document templates.
+- **Assumptions**: Standard tender fields (as listed) and document formats are assumed based on provided code and common practices.
+- **Error Handling**: Comprehensive error messages and logging ensure robust debugging and user feedback.
+- **Scalability**: Modular design supports future additions (e.g., new document types, advanced analytics).
+- **Current Context**: All timestamps and dates align with 08:01 PM IST, July 19, 2025.
+
