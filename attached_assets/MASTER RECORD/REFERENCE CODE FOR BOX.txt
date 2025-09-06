@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=210mm, height=297mm">
+    <title>Hand Receipt (RPWA 28)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+        }
+
+        .container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 10mm;
+            border: 2px solid #ccc;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2px;
+        }
+
+        .details {
+            margin-bottom: 1px;
+        }
+
+        .amount-words {
+            font-style: italic;
+        }
+
+        .signature-area {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .signature-area td, .signature-area th {
+            border: 1px solid #ccc;
+            padding: 5px;
+            text-align: left;
+        }
+
+        .offices {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .offices td, .offices th {
+            border: 1px solid black;
+            padding: 5px;
+            text-align: left;
+            word-wrap: break-word;
+        }
+
+        .input-field {
+            border-bottom: 1px dotted #ccc;
+            padding: 3px;
+            width: calc(100% - 10px);
+            display: inline-block;
+        }
+
+        @media print {
+            .container {
+                border: none;
+                width: 210mm;
+                min-height: 297mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            .input-field {
+                border: none;
+            }
+
+            body {
+                margin: 0;
+            }
+        }
+
+        .seal-container {
+            position: absolute;
+            left: 10mm;
+            bottom: 10mm;
+            width: 40mm;
+            height: 25mm;
+            z-index: 10;
+        }
+
+        .seal {
+            max-width: 100%;
+            max-height: 100%;
+            text-align: center;
+            line-height: 40mm;
+            color: blue;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .bottom-left-box {
+            position: absolute;
+            bottom: 40mm;
+            left: 40mm;
+            border: 2px solid black;
+            padding: 10px;
+            width: 300px;
+            text-align: left;
+            height: auto;
+        }
+
+        .bottom-left-box p {
+            margin: 3px 0;
+        }
+
+        .bottom-left-box .blue-text {
+            color: blue;
+        }
+
+        #prompt-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+        }
+
+        #prompt-container input, #prompt-container button {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="prompt-container">
+        <label for="payee">Payee Name:</label><br>
+        <input type="text" id="payee"><br>
+        <label for="amount">Amount:</label><br>
+        <input type="number" id="amount"><br>
+        <label for="work">Name of Work:</label><br>
+        <input type="text" id="work"><br>
+        <button id="generate-button">Generate Receipt</button>
+    </div>
+
+    <div class="container" id="receipt-content"></div>
+
+    <script>
+        function convertNumberToWords(num) {
+            const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+            const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+            const teens = ["Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+            const crore = " Crore ";
+            const lakh = " Lakh ";
+            const thousand = " Thousand ";
+            const hundred = " Hundred ";
+            const and = " and ";
+
+            if (num === 0) return "Zero";
+
+            let words = "";
+
+            if (Math.floor(num / 10000000)) {
+                words += convertNumberToWords(Math.floor(num / 10000000)) + crore;
+                num %= 10000000;
+            }
+
+            if (Math.floor(num / 100000)) {
+                words += convertNumberToWords(Math.floor(num / 100000)) + lakh;
+                num %= 100000;
+            }
+
+            if (Math.floor(num / 1000)) {
+                words += convertNumberToWords(Math.floor(num / 1000)) + thousand;
+                num %= 1000;
+            }
+
+            if (Math.floor(num / 100)) {
+                words += convertNumberToWords(Math.floor(num / 100)) + hundred;
+                num %= 100;
+            }
+
+            if (num > 0) {
+                if (words !== "") words += and;
+                if (num < 10) words += ones[num];
+                else if (num < 20) words += teens[num - 10];
+                else {
+                    words += tens[Math.floor(num / 10)];
+                    if (num % 10 > 0) words += " " + ones[num % 10];
+                }
+            }
+
+            return words;
+        }
+
+        function generateReceiptHTML(payee, amount, work) {
+            const amountInWords = convertNumberToWords(parseFloat(amount));
+            return `
+                <div class="header">
+                    <h2>Payable to: - ${payee} ( Electric Contractor)</h2>
+<h2\>HAND RECEIPT \(RPWA 28\)</h2\>
+<p\>\(Referred to in PWF&A Rules 418,424,436 & 438\)</p\>
+<p\>Division \- PWD Electric Division, Udaipur</p\>
+</div\>
+<div class\="details"\>
+<p\>\(1\)Cash Book Voucher No\. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p\>
+<p\>\(2\)Cheque No\. and Date &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p\>
+<p>(3) Pay for ECS Rs.${amount}/- (Rupees <span id="amount-words" class="amount-words">${amountInWords} only</span>)</p>
+                <p>(4) Paid by me</p>
+                <p>(5) Received from The Executive Engineer PWD Electric Division, Udaipur the sum of Rs. ${amount}/- (Rupees <span id="amount-words" class="amount-words">${amountInWords} only</span>)</p>
+                <p> Name of work for which payment is made: <span id="work-name" class="input-field">${work}</span></p>
+                <p> Chargeable to Head:- 8443 [EMD-Refund] </p>   
+                 <table class="signature-area">
+                    <tr>
+                        <td>Witness</td>
+                        <td>Stamp</td>
+                        <td>Signature of payee</td>
+                    </tr>
+                    <tr>
+                        <td>Cash Book No. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Page No. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                <table>
+  <table class="offices">
+    <tr>
+      <td>For use in the Divisional Office</td>
+      <td>For use in the Accountant General's office</td>
+    </tr>
+    <tr>
+      <td>Checked</td>
+      <td>Audited/Reviewed</td>
+    </tr>
+    <tr>
+      <td>Accounts Clerk</td>
+      <td>
+        DA &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp  Auditor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp  Supdt. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp  G.O.
+      </td>
+    </tr>
+  </table>
+</table>
+</table>
+                <div class="seal-container">
+                    <div class="seal">
+                        <p></p>
+                        <p></p>
+                        <p></p>
+                    </div>
+                </div>
+                <div class="bottom-left-box">
+                    <p class="blue-text"> Passed for Rs. ${amount}</p>
+                    <p class="blue-text"> In Words Rupees: ${amountInWords} Only</p>
+                    <p class="blue-text"> Chargeable to Head:- 8443 [EMD-Refund]</p>
+                    <div class="seal">
+                        <p>Ar.</p>
+                        <p>D.A.</p>
+                        <p>E.E.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('generate-button').addEventListener('click', function() {
+            const enteredPayee = document.getElementById('payee').value;
+            const enteredAmount = parseFloat(document.getElementById('amount').value);
+            const enteredWork = document.getElementById('work').value;
+            if (enteredPayee && !isNaN(enteredAmount) && enteredWork) {
+                const receiptHTML = generateReceiptHTML(enteredPayee, enteredAmount, enteredWork);
+                document.getElementById('receipt-content').innerHTML = receiptHTML;
+                document.getElementById('prompt-container').style.display = 'none';
+                setTimeout(function() {
+                    window.print();
+                }, 100);
+            } else {
+                alert("Please provide all required information. Amount must be a number.");
+            }
+        });
+    </script>
+</body>
+</html>

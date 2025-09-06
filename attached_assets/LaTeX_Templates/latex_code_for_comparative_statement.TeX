@@ -1,0 +1,90 @@
+% Setting up the document class and essential packages
+\documentclass[a4paper,landscape]{article}
+\usepackage[left=1cm,right=1cm,top=2cm,bottom=2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{parskip}
+
+
+
+\begin{document}
+
+% Creating the title and header
+\begin{center}
+    \textbf{\Large Office of the Executive Engineer, PWD Electric Division, Udaipur} \\
+    \vspace{0.5cm}
+    \textbf{Comparative Statement of Tenders} \\
+    \vspace{0.3cm}
+    \textbf{Name of Work: Electric cabling and maintenance work in Sahelion ki Bari, Udaipur} \\
+    \textbf{NIT No.: 27/2024-25 \quad Date: 12-03-2025 \quad Item-1}
+\end{center}
+
+% Creating the first table for tender summary
+\begin{center}
+    \begin{tabular}{p{0.3\textwidth} p{0.2\textwidth} p{0.2\textwidth} p{0.2\textwidth}}
+        \toprule
+        \textbf{NIT No.:} & 27/2024-25 & \textbf{Estimated Amount for Item in NIT (Rs.):} & 641694 \\
+        \textbf{Amount of Tender Recommended (Rs.):} & 628861 & \textbf{Earnest Money @2\% (Rs.):} & 13000 \\
+        \textbf{Estimated Amount of Item Not Included in Tender (Rs.):} & Nil & \textbf{Time for Completion (Months):} & 9 \\
+        \textbf{Contingencies and Other Provisions Included in Estimate (Rs.):} & As per rules & \textbf{Date of Calling NIT:} & 12-03-2025 \\
+        \textbf{Cost of Work as per Recommended Tender (Rs.):} & 628861 & \textbf{Date of Receipt of Tender:} & 24-03-2025 \\
+        \textbf{Percentage of Excess/Saving Over Sanctioned Estimate (\%):} & As per recommended rate & & \\
+        \bottomrule
+    \end{tabular}
+\end{center}
+
+% Creating the second table for bidder comparison
+\vspace{0.5cm}
+\begin{center}
+    \begin{tabular}{|c|p{0.35\textwidth}|c|c|c|}
+        \hline
+        \textbf{S.No} & \textbf{Bidder Name} & \textbf{Estimated Cost (Rs.)} & \textbf{Quoted Percentage} & \textbf{Quoted Amount (Rs.)} \\
+        \hline
+        1 & M/s. Vikas Enterprises, Udaipur & 641694 & 2.00\% Below & 628861 \\
+        2 & M/s. Powertech Engineer, Rajsamand & 641694 & 2.01\% Below & 628796 \\
+        3 & M/s. Neha Electricals, Pali & 641694 & 1.00\% Below & 635278 \\
+        4 & M/s. Mitul Enterprises, 11839 Neemuch Mata Scheme, Dewali, Udaipur & 641694 & 0.10\% Below & 641053 \\
+        \hline
+    \end{tabular}
+\end{center}
+
+% Highlighting the lowest bidder
+\vspace{0.5cm}
+\begin{center}
+    \textbf{Lowest: M/s. Vikas Enterprises, Udaipur \quad 2.00\% Below \quad Rs. 628861}
+\end{center}
+
+% Adding a summary box using TikZ
+\begin{tikzpicture}[remember picture, overlay]
+    \node[
+        draw=black,
+        line width=0.5mm,
+        rectangle,
+        minimum width=0.6\textwidth,
+        minimum height=3.5cm,
+        anchor=south east,
+        xshift=-1cm,
+        yshift=2cm
+    ] at (current page.south east) {
+        \parbox{0.58\textwidth}{
+            \vspace{0.2cm}
+            \textbf{Comparative Summary} \\
+            \vspace{0.2cm}
+            The tender of the lowest bidder M/s. Vikas Enterprises, Udaipur at 2\% below, amounting to Rs. 628861/- (Rupees Six Lakh Twenty Eight Thousand Eight Hundred Sixty One Only) is hereby approved. \\
+            \vspace{0.8cm}
+            \hspace{1cm} AR \hfill DA \hfill TA \hfill EE
+        }
+    };
+\end{tikzpicture}
+
+% Adding signature lines
+\begin{flushleft}
+    \textbf{Auditor} \hfill \textbf{Divisional Accountant}
+\end{flushleft}
+
+\end{document}
